@@ -138,8 +138,8 @@ class GeneralTest extends TestCase {
         $ab = App::make('ab');
         $ab->track($request);
 
-        $this->assertEquals(0, Variant::find('a')->visitors);
-        $this->assertEquals(0, Variant::find('a')->engagement);
+        $this->assertEquals(0, Variant::where('experiment', 'logo')->where('name', 'a')->first()->visitors);
+        $this->assertEquals(0, Variant::where('experiment', 'logo')->where('name', 'a')->first()->engagement);
     }
 
     public function testTrackWithExperiment()
