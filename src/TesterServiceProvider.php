@@ -1,7 +1,7 @@
-<?php namespace Jenssegers\AB;
+<?php namespace Millar\AB;
 
-use Jenssegers\AB\Session\LaravelSession;
-use Jenssegers\AB\Session\CookieSession;
+use Millar\AB\Session\LaravelSession;
+use Millar\AB\Session\CookieSession;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -59,7 +59,7 @@ class TesterServiceProvider extends ServiceProvider {
         // Bind the command objects.
         foreach ($commands as &$command)
         {
-            $class = 'Jenssegers\\AB\\Commands\\' . ucfirst($command) . 'Command';
+            $class = 'Millar\\AB\\Commands\\' . ucfirst($command) . 'Command';
             $command = "ab::command.$class";
 
             $this->app->bind($command, function($app) use ($class)

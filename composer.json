@@ -1,11 +1,15 @@
 {
-    "name": "jenssegers/ab",
+    "name": "millar/multi-ab",
     "description": "A server-side A/B testing tool for Laravel.",
     "keywords": ["laravel","optimizely","ab","split","testing"],
     "authors": [
         {
             "name": "Jens Segers",
             "homepage": "http://jenssegers.be"
+        },
+        {
+            "name": "Sam Millar",
+            "homepage": "https://millar.io"
         }
     ],
     "license" : "MIT",
@@ -22,7 +26,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Jenssegers\\AB\\": "src/"
+            "Millar\\AB\\": "src/"
         }
     }
 }

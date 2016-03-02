@@ -18,9 +18,12 @@ return array(
     | Experiments
     |--------------------------------------------------------------------------
     |
-    | A list of experiment identifiers.
+    | A list of experiments with their variant identifiers.
     |
-    | Example: ['big-logo', 'small-buttons']
+    | Example: [
+    |     'logo': ['big', 'small'],
+    |     'copy': ['a', 'b']
+    | ]
     |
     */
 
@@ -38,5 +41,16 @@ return array(
     */
 
     'goals' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Complete Multiple
+    |--------------------------------------------------------------------------
+    |
+    | Allow goals to be completed more than once per user.
+    |
+    */
+
+    'complete_multiple' => false,
 
 );

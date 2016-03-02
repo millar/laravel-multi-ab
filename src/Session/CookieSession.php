@@ -1,4 +1,4 @@
-<?php namespace Jenssegers\AB\Session;
+<?php namespace Millar\AB\Session;
 
 use Illuminate\Support\Facades\Cookie;
 
@@ -44,11 +44,34 @@ class CookieSession implements SessionInterface {
     /**
      * {@inheritdoc}
      */
+    public function getExperiment($experiment, $name, $default = null)
+    {
+        if (isset($this->get($name)[$experiment])){
+            return $this->get($name)[$experiment];
+        } else {
+            return $default;
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function set($name, $value)
     {
         $this->data[$name] = $value;
 
         return Cookie::queue($this->cookieName, $this->data, $this->minutes);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setExperiment($experiment, $name, $value)
+    {
+        $data = $this->get($name, []);
+        $data[$experiment] = $value;
+
+        return $this->set($name, $data);
     }
 
     /**

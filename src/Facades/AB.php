@@ -1,4 +1,4 @@
-<?php namespace Jenssegers\AB\Facades;
+<?php namespace Millar\AB\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

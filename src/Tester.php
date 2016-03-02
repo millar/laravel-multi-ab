@@ -1,12 +1,13 @@
-<?php namespace Jenssegers\AB;
+<?php namespace Millar\AB;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
-use Jenssegers\AB\Session\SessionInterface;
-use Jenssegers\AB\Models\Experiment;
-use Jenssegers\AB\Models\Goal;
+use Millar\AB\Session\SessionInterface;
+use Millar\AB\Models\Experiment;
+use Millar\AB\Models\Variant;
+use Millar\AB\Models\Goal;
 
 class Tester {
 
@@ -36,7 +37,7 @@ class Tester {
     public function track(Request $request)
     {
         // Don't track if there is no active experiment.
-        if ( ! $this->session->get('experiment')) return;
+        if ( ! $this->session->get('variant')) return;
 
         // Since there is an ongoing experiment, increase the pageviews.
         // This will only be incremented once during the whole experiment.
@@ -70,22 +71,22 @@ class Tester {
     }
 
     /**
-     * Get or compare the current experiment for this session.
+     * Get or compare the current experiment variant for this session.
      *
+     * @param  string  $experiment
      * @param  string  $target
      * @return bool|string
      */
-    public function experiment($target = null)
+    public function variant($experiment, $target = null)
     {
-        // Get the existing or new experiment.
-        $experiment = $this->session->get('experiment') ?: $this->nextExperiment();
+        $variant = $this->session->getExperiment($experiment, 'variant') ?: $this->nextVariant($experiment);
 
         if (is_null($target))
         {
-            return $experiment;
+            return $variant;
         }
 
-        return $experiment == $target;
+        return $variant == $target;
     }
 
     /**
@@ -95,15 +96,17 @@ class Tester {
      */
     public function pageview()
     {
-        // Only interact once per experiment.
-        if ($this->session->get('pageview')) return;
+        foreach ($this->session->get('variant', []) as $experiment => $variant){
+            // Only interact once per experiment.
+            if ($this->session->getExperiment($experiment, 'pageview')) return;
 
-        $experiment = Experiment::firstOrNew(['name' => $this->experiment()]);
-        $experiment->visitors++;
-        $experiment->save();
+            $variant = Variant::firstOrNew(['experiment' => $experiment, 'name' => $this->variant($experiment), 'experiment_variant' => "$experiment.".$this->variant($experiment)]);
+            $variant->visitors++;
+            $variant->save();
 
-        // Mark current experiment as interacted.
-        $this->session->set('pageview', 1);
+            // Mark current experiment as interacted.
+            $this->session->setExperiment($experiment, 'pageview', 1);
+        }
     }
 
     /**
@@ -113,47 +116,56 @@ class Tester {
      */
     public function interact()
     {
-        // Only interact once per experiment.
-        if ($this->session->get('interacted')) return;
+        foreach ($this->session->get('variant', []) as $experiment => $variant){
+            // Only interact once per experiment.
+            if ($this->session->getExperiment($experiment, 'interacted')) return;
 
-        $experiment = Experiment::firstOrNew(['name' => $this->experiment()]);
-        $experiment->engagement++;
-        $experiment->save();
+            $variant = Variant::firstOrNew(['experiment' => $experiment, 'name' => $this->variant($experiment), 'experiment_variant' => "$experiment.".$this->variant($experiment)]);
+            $variant->engagement++;
+            $variant->save();
 
-        // Mark current experiment as interacted.
-        $this->session->set('interacted', 1);
+            // Mark current experiment as interacted.
+            $this->session->setExperiment($experiment, 'interacted', 1);
+        }
     }
 
     /**
-     * Mark a goal as completed for the current experiment.
+     * Mark a goal as completed for the current variants.
      *
      * @return void
      */
-    public function complete($name)
+    public function complete($name, $experiment = null, $variant = null)
     {
-        // Only complete once per experiment.
-        if ($this->session->get("completed_$name")) return;
+        $experiments = ($experiment && $variant) ? [$experiment => $variant] : $this->session->get('variant', []);
 
-        $goal = Goal::firstOrCreate(['name' => $name, 'experiment' => $this->experiment()]);
-        Goal::where('name', $name)->where('experiment', $this->experiment())->update(['count' => ($goal->count + 1)]);
+        foreach ($experiments as $experiment => $v){
+            // Only complete once per experiment.
+            if ( ! Config::get('ab::complete_multiple', false) && $this->session->getExperiment($experiment, "completed_$name")) return;
 
-        // Mark current experiment as completed.
-        $this->session->set("completed_$name", 1);
+            $variant = $variant ?: $v;
+
+            $goal = Goal::firstOrCreate(['name' => $name, 'experiment' => $experiment, 'variant' => $variant]);
+            Goal::where('name', $name)->where('experiment', $experiment)->where('variant', $variant)->update(['count' => ($goal->count + 1)]);
+
+            // Mark current experiment as completed.
+            $this->session->setExperiment($experiment, "completed_$name", 1);
+        }
     }
 
     /**
-     * Set the current experiment for this session manually.
+     * Set the current experiment variant for this session manually.
      *
      * @param string $experiment
+     * @param string $variant
      */
-    public function setExperiment($experiment)
+    public function setVariant($experiment, $variant)
     {
-        if ($this->session->get('experiment') != $experiment)
+        if ($this->session->getExperiment($experiment, 'variant') != $variant)
         {
-            $this->session->set('experiment', $experiment);
+            $this->session->setExperiment($experiment, 'variant', $variant);
 
-            // Increase pageviews for new experiment.
-            $this->nextExperiment($experiment);
+            // Increase pageviews for new variant.
+            $this->nextVariant($experiment, $variant);
         }
     }
 
@@ -198,47 +210,52 @@ class Tester {
     }
 
     /**
-     * Prepare an experiment for this session.
+     * Prepare an variant for this session and selected experiment.
      *
      * @return string
      */
-    protected function nextExperiment($experiment = null)
+    protected function nextVariant($experiment, $variant = null)
     {
         // Verify that the experiments are in the database.
-        $this->checkExperiments();
+        $this->checkVariants();
 
-        if ($experiment)
+        if ($variant)
         {
-            $experiment = Experiment::active()->findOrfail($experiment);
+            $variant = Variant::active()->where('experiment', $experiment)->where('name', $variant)->firstOrFail();
         }
         else
         {
-            $experiment = Experiment::active()->orderBy('visitors', 'asc')->firstOrFail();
+            $variant = Variant::active()->where('experiment', $experiment)->orderBy('visitors', 'asc')->firstOrFail();
         }
 
-        $this->session->set('experiment', $experiment->name);
+        $this->session->setExperiment($experiment, 'variant', $variant->name);
 
         // Since there is an ongoing experiment, increase the pageviews.
         // This will only be incremented once during the whole experiment.
         $this->pageview();
 
-        return $experiment->name;
+        return $variant->name;
     }
 
     /**
-     * Add experiments to the database.
+     * Add variants to the database.
      *
      * @return void
      */
-    protected function checkExperiments()
+    protected function checkVariants()
     {
-        // Check if the database contains all experiments.
-        if (Experiment::active()->count() != count($this->getExperiments()))
+        // Check if the database contains all variants.
+        if (Variant::active()->count() != count($this->getExperiments(), COUNT_RECURSIVE) - count($this->getExperiments()))
         {
             // Insert all experiments.
-            foreach ($this->getExperiments() as $experiment)
+            foreach ($this->getExperiments() as $experiment => $variants)
             {
                 Experiment::firstOrCreate(['name' => $experiment]);
+
+                foreach ($variants as $variant)
+                {
+                    Variant::firstOrCreate(['name' => $variant, 'experiment' => $experiment, 'experiment_variant' => "$experiment.$variant"]);
+                }
             }
         }
     }

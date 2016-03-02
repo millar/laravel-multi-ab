@@ -1,4 +1,4 @@
-<?php namespace Jenssegers\AB\Session;
+<?php namespace Millar\AB\Session;
 
 use Illuminate\Support\Facades\Session;
 
@@ -37,11 +37,34 @@ class LaravelSession implements SessionInterface {
     /**
      * {@inheritdoc}
      */
+    public function getExperiment($experiment, $name, $default = null)
+    {
+        if (isset($this->get($name)[$experiment])){
+            return $this->get($name)[$experiment];
+        } else {
+            return $default;
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function set($name, $value)
     {
         $this->data[$name] = $value;
 
         return Session::set($this->sessionName, $this->data);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setExperiment($experiment, $name, $value)
+    {
+        $data = $this->get($name, []);
+        $data[$experiment] = $value;
+
+        return $this->set($name, $data);
     }
 
     /**

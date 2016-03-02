@@ -1,10 +1,11 @@
 <?php
 require_once 'TestCase.php';
 
-use Jenssegers\AB\Tester;
-use Jenssegers\AB\Models\Experiment;
-use Jenssegers\AB\Models\Goal;
-use Jenssegers\AB\Commands\InstallCommand;
+use Millar\AB\Tester;
+use Millar\AB\Models\Experiment;
+use Millar\AB\Models\Variant;
+use Millar\AB\Models\Goal;
+use Millar\AB\Commands\InstallCommand;
 
 class CommandTest extends TestCase {
 
@@ -13,6 +14,7 @@ class CommandTest extends TestCase {
         Artisan::call('ab:install');
 
         $this->assertTrue(Schema::hasTable('experiments'));
+        $this->assertTrue(Schema::hasTable('variants'));
         $this->assertTrue(Schema::hasTable('goals'));
     }
 
@@ -20,22 +22,22 @@ class CommandTest extends TestCase {
     {
         Artisan::call('ab:install');
 
-        Experiment::find('a')->update(['visitors' => 153, 'engagement' => 35]);
+        Variant::where('experiment', 'logo')->where('variant', 'a')->update(['visitors' => 153, 'engagement' => 35]);
 
         Artisan::call('ab:flush');
 
-        $experiment = Experiment::find('a');
+        $variant = Variant::where('experiment', 'logo')->where('variant', 'a')->first();
 
-        $this->assertEquals(0, $experiment->visitors);
-        $this->assertEquals(0, $experiment->engagement);
+        $this->assertEquals(0, $variant->visitors);
+        $this->assertEquals(0, $variant->engagement);
     }
 
     public function testReport()
     {
         Artisan::call('ab:install');
 
-        Experiment::find('a')->update(['visitors' => 153, 'engagement' => 35]);
-        Goal::create(['name'=>'foo', 'experiment'=>'a', 'count'=>42]);
+        Variant::where('experiment', 'logo')->where('name', 'a')->update(['visitors' => 153, 'engagement' => 35]);
+        Goal::create(['name'=>'foo', 'experiment'=>'logo', 'variant'=>'a', 'count'=>42]);
 
         $output = new Symfony\Component\Console\Output\BufferedOutput;
         Artisan::call('ab:report', [], $output);
@@ -51,8 +53,8 @@ class CommandTest extends TestCase {
     {
         Artisan::call('ab:install');
 
-        Experiment::find('a')->update(['visitors' => 153, 'engagement' => 35]);
-        Goal::create(['name'=>'foo', 'experiment'=>'a', 'count'=>42]);
+        Variant::where('experiment', 'logo')->where('name', 'a')->update(['visitors' => 153, 'engagement' => 35]);
+        Goal::create(['name'=>'foo', 'experiment'=>'logo', 'variant'=>'a', 'count'=>42]);
 
         $output = new Symfony\Component\Console\Output\BufferedOutput;
         Artisan::call('ab:export', [], $output);

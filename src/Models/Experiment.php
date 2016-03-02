@@ -1,4 +1,4 @@
-<?php namespace Jenssegers\AB\Models;
+<?php namespace Millar\AB\Models;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Database\Eloquent\Model as Eloquent;
@@ -9,7 +9,7 @@ class Experiment extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = ['name', 'visitors', 'engagement'];
+    protected $fillable = ['name'];
 
     public function __construct(array $attributes = array())
     {
@@ -19,9 +19,9 @@ class Experiment extends Eloquent {
         $this->connection = Config::get('ab::connection');
     }
 
-    public function goals()
+    public function variants()
     {
-        return $this->hasMany('Jenssegers\AB\Models\Goal', 'experiment');
+        return $this->hasMany('Millar\AB\Models\Variant', 'experiment');
     }
 
     public function scopeActive($query)

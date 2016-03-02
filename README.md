@@ -1,9 +1,11 @@
-Laravel A/B Testing
+Laravel 4 Multi A/B Testing
 ===================
 
-[![Build Status](http://img.shields.io/travis/jenssegers/laravel-ab.svg)](https://travis-ci.org/jenssegers/laravel-ab) [![Coverage Status](http://img.shields.io/coveralls/jenssegers/laravel-ab.svg)](https://coveralls.io/r/jenssegers/laravel-ab)
+[![Build Status](http://img.shields.io/travis/millar/laravel-multi-ab.svg)](https://travis-ci.org/millar/laravel-multi-ab) [![Coverage Status](http://img.shields.io/coveralls/millar/laravel-multi-ab.svg)](https://coveralls.io/r/millar/laravel-multi-ab)
 
 A server-side A/B testing tool for Laravel, a great free alternative for services such as optimizely. Use A/B testing to figure out which content works, and which doesn't.
+
+This fork (based on [jenssegers/ab](https://github.com/jenssegers/laravel-ab)) allows multiple tests to be ran in parallel.
 
 This tool allows you to experiment with different variations of your website and tracks what the difference in engagement or reached goals is between them. Whenever you ask the A/B testing class for the current experiment, it will select the next experiment that has the least visits so that every experiment is tested equally. When there is an active experiment going on, it will start tracking engagement (click a different link, or submitting a form) and check if certain defined goals are reached. These goals are generally urls or routes, but can also be triggered manually.
 
@@ -12,24 +14,24 @@ Installation
 
 Install using composer:
 
-    composer require jenssegers/ab
+    composer require millar/multi-ab
 
 Add the service provider in `app/config/app.php`:
 
-    'Jenssegers\AB\TesterServiceProvider',
+    'Millar\AB\TesterServiceProvider',
 
 Register the AB alias:
 
-    'AB'           => 'Jenssegers\AB\Facades\AB',
+    'AB'           => 'Millar\AB\Facades\AB',
 
 Configuration
 -------------
 
 Publish the included configuration file:
 
-    php artisan config:publish jenssegers/ab
+    php artisan config:publish millar/ab
 
-Next, edit the `config/packages/jenssegers/ab/config.php` file. The following configuration options are available:
+Next, edit the `config/packages/millar/ab/config.php` file. The following configuration options are available:
 
 ### Database Connection
 
@@ -70,15 +72,15 @@ The database structure is small and lightweight, so it will not impact your appl
 Usage
 -----
 
-After you have defined your experiments and goals, you can start designing your A/B tests. All your visitors will be given the next experiment that has the least visits. You can request the current experiment identifier with the `AB::experiment()` method. For example, if you have defined the following experiments `['a', 'b', 'c']`, your view could look like this:
+After you have defined your experiments and goals, you can start designing your A/B tests. All your visitors will be given the next variant that has the least visits. You can request the current variant identifier with the `AB::variant($experiment)` method. For example, if you have defined the following experiments `['logo' => ['a', 'b', 'c']]`, your view could look like this:
 
-    @if (AB::experiment('a'))
+    @if (AB::variant('logo', 'a'))
         <div class="logo-big"></div>
 
-    @elseif (AB::experiment('b'))
+    @elseif (AB::variant('logo', 'b'))
         <h1>Brand name</h1>
 
-    @elseif (AB::experiment('c'))
+    @elseif (AB::variant('logo', 'c'))
         <div class="logo-greyscale"></div>
 
     @endif
@@ -129,13 +131,13 @@ Used to manually trigger an pageview.
 
 Used to manually trigger an interaction which results in engagement.
 
-**AB::complete($goal)**
+**AB::complete($goal [, $experiment, $variant])**
 
-Used to manually trigger goals. Useful when you want to track goals that are not linked to urls or routes.
+Used to manually trigger goals. Useful when you want to track goals that are not linked to urls or routes. You can optionally specify the experiment-variant combo in cases where a goal may be completed by a different user (e.g. referral tracking).
 
 **AB::getExperiments()**
 
-Get the list of experiments.
+Get the array of experiments.
 
 **AB::getGoals()**
 

@@ -1,7 +1,8 @@
-<?php namespace Jenssegers\AB\Commands;
+<?php namespace Millar\AB\Commands;
 
-use Jenssegers\AB\Models\Experiment;
-use Jenssegers\AB\Models\Goal;
+use Millar\AB\Models\Experiment;
+use Millar\AB\Models\Variant;
+use Millar\AB\Models\Goal;
 
 use Config;
 use Schema;
@@ -50,6 +51,19 @@ class InstallCommand extends Command {
             Schema::connection($connection)->create('experiments', function($table)
             {
                 $table->string('name');
+                $table->primary('name');
+            });
+        }
+
+        // Create variants table.
+        if ( ! Schema::connection($connection)->hasTable('variants'))
+        {
+            Schema::connection($connection)->create('variants', function($table)
+            {
+                $table->increments('id');
+                $table->string('experiment');
+                $table->string('name');
+                $table->string('experiment_variant');
                 $table->integer('visitors')->unsigned()->default(0);
                 $table->integer('engagement')->unsigned()->default(0);
             });
@@ -62,8 +76,9 @@ class InstallCommand extends Command {
             {
                 $table->string('name');
                 $table->string('experiment');
+                $table->string('variant');
                 $table->integer('count')->unsigned()->default(0);
-                $table->primary(array('name', 'experiment'));
+                $table->primary(array('name', 'experiment', 'variant'));
             });
         }
 
@@ -84,13 +99,18 @@ class InstallCommand extends Command {
         }
 
         // Populate experiments and goals.
-        foreach ($experiments as $experiment)
+        foreach ($experiments as $experiment => $variants)
         {
             Experiment::firstOrCreate(['name' => $experiment]);
 
-            foreach ($goals as $goal)
+            foreach ($variants as $variant)
             {
-                Goal::firstOrCreate(['name' => $goal, 'experiment' => $experiment]);
+                Variant::firstOrCreate(['name' => $variant, 'experiment' => $experiment, 'experiment_variant' => "$experiment.$variant"]);
+
+                foreach ($goals as $goal)
+                {
+                    Goal::firstOrCreate(['name' => $goal, 'experiment' => $experiment, 'variant' => $variant]);
+                }
             }
         }
 

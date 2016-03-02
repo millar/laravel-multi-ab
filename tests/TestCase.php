@@ -4,12 +4,12 @@ class TestCase extends Orchestra\Testbench\TestCase {
 
     protected function getPackageProviders()
     {
-        return ['Jenssegers\AB\TesterServiceProvider'];
+        return ['Millar\AB\TesterServiceProvider'];
     }
 
     protected function getPackageAliases()
     {
-        return ['AB' => 'Jenssegers\AB\Facades\AB'];
+        return ['AB' => 'Millar\AB\Facades\AB'];
     }
 
     public function setUp()
@@ -17,7 +17,10 @@ class TestCase extends Orchestra\Testbench\TestCase {
         parent::setUp();
 
         // Add some experiments.
-        Config::set('ab::experiments', ['a', 'b', 'c']);
+        Config::set('ab::experiments', [
+            'logo' => ['a', 'b', 'c'],
+            'font' => ['a', 'b', 'c'],
+        ]);
         Config::set('ab::goals', ['register', 'buy', 'contact']);
 
         // Make sure we're working in memory.

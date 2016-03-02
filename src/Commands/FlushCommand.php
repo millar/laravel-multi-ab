@@ -1,7 +1,7 @@
-<?php namespace Jenssegers\AB\Commands;
+<?php namespace Millar\AB\Commands;
 
-use Jenssegers\AB\Models\Experiment;
-use Jenssegers\AB\Models\Goal;
+use Millar\AB\Models\Experiment;
+use Millar\AB\Models\Goal;
 
 use Config;
 use DB;
@@ -45,6 +45,7 @@ class FlushCommand extends Command {
         $connection = Config::get('ab::connection');
 
         DB::connection($connection)->table('experiments')->delete();
+        DB::connection($connection)->table('variants')->delete();
         DB::connection($connection)->table('goals')->delete();
 
         $this->call('ab:install');

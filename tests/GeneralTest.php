@@ -1,10 +1,11 @@
 <?php
 require_once 'TestCase.php';
 
-use Jenssegers\AB\Tester;
-use Jenssegers\AB\Models\Experiment;
-use Jenssegers\AB\Models\Goal;
-use Jenssegers\AB\Commands\InstallCommand;
+use Millar\AB\Tester;
+use Millar\AB\Models\Experiment;
+use Millar\AB\Models\Variant;
+use Millar\AB\Models\Goal;
+use Millar\AB\Commands\InstallCommand;
 
 class GeneralTest extends TestCase {
 
@@ -30,8 +31,8 @@ class GeneralTest extends TestCase {
     {
         $ab = App::make('ab');
 
-        $this->assertInstanceOf('Jenssegers\AB\Tester', $ab);
-        $this->assertInstanceOf('Jenssegers\AB\Session\SessionInterface', $ab->getSession());
+        $this->assertInstanceOf('Millar\AB\Tester', $ab);
+        $this->assertInstanceOf('Millar\AB\Session\SessionInterface', $ab->getSession());
     }
 
     public function testTracking()
@@ -39,7 +40,7 @@ class GeneralTest extends TestCase {
         Route::enableFilters();
         $request = Request::instance();
 
-        $ab = Mockery::mock('Jenssegers\AB\Tester');
+        $ab = Mockery::mock('Millar\AB\Tester');
         $ab->shouldReceive('track')->with($request)->once();
 
         $this->app['ab'] = $ab;
@@ -51,80 +52,83 @@ class GeneralTest extends TestCase {
         DB::table('experiments')->delete();
 
         $ab = App::make('ab');
-        $ab->experiment();
+        $ab->variant('logo');
 
-        $this->assertEquals(3, Experiment::count());
+        $this->assertEquals(6, Variant::count());
     }
 
-    public function testNewExperiment()
+    public function testNewVariant()
     {
         $ab = App::make('ab');
-        $experiment = $ab->experiment();
+        $variant = $ab->variant('logo');
 
-        $this->assertEquals('a', $experiment);
-        $this->assertEquals($experiment, $ab->getSession()->get('experiment'));
-        $this->assertEquals(1, Experiment::find('a')->visitors);
+        $this->assertEquals('a', $variant);
+        $this->assertEquals($variant, $ab->getSession()->getExperiment('logo', 'variant'));
+        $this->assertEquals(1, Variant::where('experiment', 'logo')->where('name', 'a')->first()->visitors);
     }
 
-    public function testExistingExperiment()
+    public function testExistingVariant()
     {
-        $session = Mockery::mock('Jenssegers\AB\Session\SessionInterface');
-        $session->shouldReceive('get')->with('experiment')->andReturn('a');
+        $session = Mockery::mock('Millar\AB\Session\SessionInterface');
+        $session->shouldReceive('getExperiment')->with('font', 'variant')->andReturn('b');
 
         $ab = new Tester($session);
-        $experiment = $ab->experiment();
+        $variant = $ab->variant('font');
 
-        $this->assertEquals('a', $experiment);
-        $this->assertEquals($experiment, $ab->getSession()->get('experiment'));
+        $this->assertEquals('b', $variant);
+        $this->assertEquals($variant, $ab->getSession()->getExperiment('font', 'variant'));
     }
 
-    public function testExperimentCompare()
+    public function testVariantCompare()
     {
         $ab = App::make('ab');
-        $experiment = $ab->experiment();
+        $variant = $ab->variant('logo');
 
-        $this->assertEquals('a', $experiment);
-        $this->assertTrue($ab->experiment('a'));
-        $this->assertFalse($ab->experiment('b'));
+        $this->assertEquals('a', $variant);
+        $this->assertTrue($ab->variant('logo', 'a'));
+        $this->assertFalse($ab->variant('logo', 'b'));
     }
 
     public function testPageview()
     {
-        $session = Mockery::mock('Jenssegers\AB\Session\SessionInterface');
-        $session->shouldReceive('get')->with('experiment')->andReturn('a');
-        $session->shouldReceive('get')->with('pageview')->andReturn(null)->once();
-        $session->shouldReceive('set')->with('pageview', 1)->once();
+        $session = Mockery::mock('Millar\AB\Session\SessionInterface');
+        $session->shouldReceive('getExperiment')->with('logo', 'variant')->andReturn('a');
+        $session->shouldReceive('getExperiment')->with('logo', 'pageview')->andReturn(null)->once();
+        $session->shouldReceive('setExperiment')->with('logo', 'pageview', 1)->once();
+        $session->shouldReceive('get')->with('variant', [])->andReturn(['logo' => 'a'])->once();
 
         $ab = new Tester($session);
         $ab->pageview();
 
-        $this->assertEquals(1, Experiment::find('a')->visitors);
+        $this->assertEquals(1, Variant::where('experiment', 'logo')->where('name', 'a')->first()->visitors);
     }
 
     public function testInteract()
     {
-        $session = Mockery::mock('Jenssegers\AB\Session\SessionInterface');
-        $session->shouldReceive('get')->with('experiment')->andReturn('a');
-        $session->shouldReceive('get')->with('interacted')->andReturn(null)->once();
-        $session->shouldReceive('set')->with('interacted', 1)->once();
+        $session = Mockery::mock('Millar\AB\Session\SessionInterface');
+        $session->shouldReceive('getExperiment')->with('logo', 'variant')->andReturn('a');
+        $session->shouldReceive('getExperiment')->with('logo', 'interacted')->andReturn(null)->once();
+        $session->shouldReceive('setExperiment')->with('logo', 'interacted', 1)->once();
+        $session->shouldReceive('get')->with('variant', [])->andReturn(['logo' => 'a'])->once();
 
         $ab = new Tester($session);
         $ab->interact();
 
-        $this->assertEquals(1, Experiment::find('a')->engagement);
+        $this->assertEquals(1, Variant::where('experiment', 'logo')->where('name', 'a')->first()->engagement);
     }
 
     public function testComplete()
     {
-        $session = Mockery::mock('Jenssegers\AB\Session\SessionInterface');
-        $session->shouldReceive('get')->with('experiment')->andReturn('a');
-        $session->shouldReceive('get')->with('completed_register')->andReturn(null)->once();
-        $session->shouldReceive('set')->with('completed_register', 1)->once();
+        $session = Mockery::mock('Millar\AB\Session\SessionInterface');
+        $session->shouldReceive('getExperiment')->with('logo', 'variant')->andReturn('a');
+        $session->shouldReceive('getExperiment')->with('logo', 'completed_register')->andReturn(null)->once();
+        $session->shouldReceive('setExperiment')->with('logo', 'completed_register', 1)->once();
+        $session->shouldReceive('get')->with('variant', [])->andReturn(['logo' => 'a'])->once();
 
         $ab = new Tester($session);
         $ab->complete('register');
 
-        $this->assertEquals(1, Goal::where('name', 'register')->where('experiment', 'a')->first()->count);
+        $this->assertEquals(1, Goal::where('name', 'register')->where('experiment', 'logo')->where('variant', 'a')->first()->count);
     }
 
     public function testTrackWithoutExperiment()
@@ -134,8 +138,8 @@ class GeneralTest extends TestCase {
         $ab = App::make('ab');
         $ab->track($request);
 
-        $this->assertEquals(0, Experiment::find('a')->visitors);
-        $this->assertEquals(0, Experiment::find('a')->engagement);
+        $this->assertEquals(0, Variant::find('a')->visitors);
+        $this->assertEquals(0, Variant::find('a')->engagement);
     }
 
     public function testTrackWithExperiment()
@@ -143,11 +147,11 @@ class GeneralTest extends TestCase {
         $request = Request::instance();
 
         $ab = App::make('ab');
-        $ab->experiment();
+        $ab->variant('logo');
         $ab->track($request);
 
-        $this->assertEquals(1, Experiment::find('a')->visitors);
-        $this->assertEquals(0, Experiment::find('a')->engagement);
+        $this->assertEquals(1, Variant::where('experiment', 'logo')->where('name', 'a')->first()->visitors);
+        $this->assertEquals(0, Variant::where('experiment', 'logo')->where('name', 'a')->first()->engagement);
     }
 
     public function testTrackEngagement()
@@ -157,11 +161,11 @@ class GeneralTest extends TestCase {
         $request = Request::create('http://localhost/info', 'get', [], [], [], $headers);
 
         $ab = App::make('ab');
-        $ab->experiment();
+        $ab->variant('font');
         $ab->track($request);
 
-        $this->assertEquals(1, Experiment::find('a')->visitors);
-        $this->assertEquals(1, Experiment::find('a')->engagement);
+        $this->assertEquals(1, Variant::where('experiment', 'font')->where('name', 'a')->first()->visitors);
+        $this->assertEquals(1, Variant::where('experiment', 'font')->where('name', 'a')->first()->engagement);
     }
 
     public function testTrackGoal()
@@ -171,12 +175,12 @@ class GeneralTest extends TestCase {
         $request = Request::create('http://localhost/buy', 'get', [], [], [], $headers);
 
         $ab = App::make('ab');
-        $ab->experiment();
+        $ab->variant('font');
         $ab->track($request);
 
-        $this->assertEquals(1, Experiment::find('a')->visitors);
-        $this->assertEquals(1, Experiment::find('a')->engagement);
-        $this->assertEquals(1, Goal::where('name', 'buy')->where('experiment', 'a')->first()->count);
+        $this->assertEquals(1, Variant::where('experiment', 'font')->where('name', 'a')->first()->visitors);
+        $this->assertEquals(1, Variant::where('experiment', 'font')->where('name', 'a')->first()->engagement);
+        $this->assertEquals(1, Goal::where('name', 'buy')->where('experiment', 'font')->where('variant', 'a')->first()->count);
     }
 
     public function testTrackRouteGoal()
@@ -193,17 +197,17 @@ class GeneralTest extends TestCase {
         Route::dispatch($request);
 
         $ab = App::make('ab');
-        $ab->experiment();
+        $ab->variant('font');
         $ab->track($request);
 
-        $this->assertEquals(1, Experiment::find('a')->visitors);
-        $this->assertEquals(1, Experiment::find('a')->engagement);
-        $this->assertEquals(1, Goal::where('name', 'buy')->where('experiment', 'a')->first()->count);
+        $this->assertEquals(1, Variant::where('experiment', 'font')->where('name', 'a')->first()->visitors);
+        $this->assertEquals(1, Variant::where('experiment', 'font')->where('name', 'a')->first()->engagement);
+        $this->assertEquals(1, Goal::where('name', 'buy')->where('experiment', 'font')->where('variant', 'a')->first()->count);
     }
 
     public function testSetSession()
     {
-        $session = Mockery::mock('Jenssegers\AB\Session\SessionInterface');
+        $session = Mockery::mock('Millar\AB\Session\SessionInterface');
 
         $ab = App::make('ab');
         $ab->setSession($session);
@@ -224,12 +228,12 @@ class GeneralTest extends TestCase {
         Route::dispatch($request);
 
         $ab = App::make('ab');
-        $ab->experiment();
+        $ab->variant('font');
         $ab->track($request);
 
-        $this->assertEquals(1, Experiment::find('a')->visitors);
-        $this->assertEquals(1, Experiment::find('a')->engagement);
-        $this->assertEquals(1, Goal::where('name', 'buy')->where('experiment', 'a')->first()->count);
+        $this->assertEquals(1, Variant::where('experiment', 'font')->where('name', 'a')->first()->visitors);
+        $this->assertEquals(1, Variant::where('experiment', 'font')->where('name', 'a')->first()->engagement);
+        $this->assertEquals(1, Goal::where('name', 'buy')->where('experiment', 'font')->where('variant', 'a')->first()->count);
     }
 
     public function testFirstPageView()
@@ -246,10 +250,10 @@ class GeneralTest extends TestCase {
 
         $ab = App::make('ab');
         $ab->track($request);
-        $ab->experiment();
+        $ab->variant('font');
 
-        $this->assertEquals(1, Experiment::find('a')->visitors);
-        $this->assertEquals(0, Experiment::find('a')->engagement);
+        $this->assertEquals(1, Variant::where('experiment', 'font')->where('name', 'a')->first()->visitors);
+        $this->assertEquals(0, Variant::where('experiment', 'font')->where('name', 'a')->first()->engagement);
     }
 
 }

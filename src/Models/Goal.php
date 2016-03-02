@@ -1,4 +1,4 @@
-<?php namespace Jenssegers\AB\Models;
+<?php namespace Millar\AB\Models;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Database\Eloquent\Model as Eloquent;
@@ -9,7 +9,7 @@ class Goal extends Eloquent {
 
     public $timestamps = false;
 
-    protected $fillable = ['name', 'experiment', 'count'];
+    protected $fillable = ['name', 'experiment', 'variant', 'count'];
 
     public function __construct(array $attributes = array())
     {
@@ -23,7 +23,7 @@ class Goal extends Eloquent {
     {
         if ($experiments = Config::get('ab::experiments'))
         {
-            return $query->whereIn('experiment', Config::get('ab::experiments'));
+            return $query->whereIn('experiment', array_keys(Config::get('ab::experiments')));
         }
 
         return $query;
