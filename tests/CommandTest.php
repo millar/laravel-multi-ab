@@ -26,7 +26,7 @@ class CommandTest extends TestCase {
 
         Artisan::call('ab:flush');
 
-        $variant = Variant::where('experiment', 'logo')->where('variant', 'a')->first();
+        $variant = Variant::where('experiment', 'logo')->where('name', 'a')->first();
 
         $this->assertEquals(0, $variant->visitors);
         $this->assertEquals(0, $variant->engagement);
