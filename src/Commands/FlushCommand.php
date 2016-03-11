@@ -44,9 +44,9 @@ class FlushCommand extends Command {
     {
         $connection = Config::get('ab::connection');
 
-        DB::connection($connection)->table('experiments')->delete();
-        DB::connection($connection)->table('variants')->delete();
-        DB::connection($connection)->table('goals')->delete();
+        DB::connection($connection)->table('ab_experiments')->delete();
+        DB::connection($connection)->table('ab_variants')->delete();
+        DB::connection($connection)->table('ab_goals')->delete();
 
         $this->call('ab:install');
 

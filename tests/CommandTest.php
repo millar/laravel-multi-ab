@@ -13,9 +13,9 @@ class CommandTest extends TestCase {
     {
         Artisan::call('ab:install');
 
-        $this->assertTrue(Schema::hasTable('experiments'));
-        $this->assertTrue(Schema::hasTable('variants'));
-        $this->assertTrue(Schema::hasTable('goals'));
+        $this->assertTrue(Schema::hasTable('ab_experiments'));
+        $this->assertTrue(Schema::hasTable('ab_variants'));
+        $this->assertTrue(Schema::hasTable('ab_goals'));
     }
 
     public function testFlush()

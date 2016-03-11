@@ -5,6 +5,8 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class Goal extends Eloquent {
 
+    protected $table = 'ab_goals';
+
     protected $primaryKey = 'name';
 
     public $timestamps = false;

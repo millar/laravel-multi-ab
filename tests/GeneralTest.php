@@ -49,7 +49,7 @@ class GeneralTest extends TestCase {
 
     public function testAutoCreateExperiments()
     {
-        DB::table('experiments')->delete();
+        DB::table('ab_experiments')->delete();
 
         $ab = App::make('ab');
         $ab->variant('logo');

@@ -5,6 +5,8 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class Variant extends Eloquent {
 
+    protected $table = 'ab_variants';
+
     public $timestamps = false;
 
     protected $fillable = ['experiment', 'name', 'visitors', 'engagement', 'experiment_variant'];
@@ -32,7 +34,7 @@ class Variant extends Eloquent {
                     array_push($experiment_variants, "$experiment.$variant");
                 }
             }
-            
+
             return $query->whereIn('experiment_variant', $experiment_variants);
         }
 

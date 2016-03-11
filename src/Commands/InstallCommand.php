@@ -46,9 +46,9 @@ class InstallCommand extends Command {
         $connection = Config::get('ab::connection');
 
         // Create experiments table.
-        if ( ! Schema::connection($connection)->hasTable('experiments'))
+        if ( ! Schema::connection($connection)->hasTable('ab_experiments'))
         {
-            Schema::connection($connection)->create('experiments', function($table)
+            Schema::connection($connection)->create('ab_experiments', function($table)
             {
                 $table->string('name');
                 $table->primary('name');
@@ -56,9 +56,9 @@ class InstallCommand extends Command {
         }
 
         // Create variants table.
-        if ( ! Schema::connection($connection)->hasTable('variants'))
+        if ( ! Schema::connection($connection)->hasTable('ab_variants'))
         {
-            Schema::connection($connection)->create('variants', function($table)
+            Schema::connection($connection)->create('ab_variants', function($table)
             {
                 $table->increments('id');
                 $table->string('experiment');
@@ -70,9 +70,9 @@ class InstallCommand extends Command {
         }
 
         // Create goals table.
-        if ( ! Schema::connection($connection)->hasTable('goals'))
+        if ( ! Schema::connection($connection)->hasTable('ab_goals'))
         {
-            Schema::connection($connection)->create('goals', function($table)
+            Schema::connection($connection)->create('ab_goals', function($table)
             {
                 $table->string('name');
                 $table->string('experiment');

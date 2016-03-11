@@ -5,6 +5,8 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class Experiment extends Eloquent {
 
+    protected $table = 'ab_experiments';
+
     protected $primaryKey = 'name';
 
     public $timestamps = false;
