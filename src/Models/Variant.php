@@ -16,7 +16,7 @@ class Variant extends Eloquent {
         parent::__construct($attributes);
 
         // Set the connection based on the config.
-        $this->connection = Config::get('multi-ab::connection');
+        $this->connection = Config::get('ab::connection');
     }
 
     public function goals()
@@ -26,10 +26,10 @@ class Variant extends Eloquent {
 
     public function scopeActive($query)
     {
-        if ($experiments = Config::get('multi-ab::experiments'))
+        if ($experiments = Config::get('ab::experiments'))
         {
             $experiment_variants = [];
-            foreach (Config::get('multi-ab::experiments') as $experiment => $variants){
+            foreach (Config::get('ab::experiments') as $experiment => $variants){
                 foreach ($variants as $variant){
                     array_push($experiment_variants, "$experiment.$variant");
                 }

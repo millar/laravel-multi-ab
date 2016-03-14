@@ -18,7 +18,7 @@ class Experiment extends Eloquent {
         parent::__construct($attributes);
 
         // Set the connection based on the config.
-        $this->connection = Config::get('multi-ab::connection');
+        $this->connection = Config::get('ab::connection');
     }
 
     public function variants()
@@ -28,9 +28,9 @@ class Experiment extends Eloquent {
 
     public function scopeActive($query)
     {
-        if ($experiments = Config::get('multi-ab::experiments'))
+        if ($experiments = Config::get('ab::experiments'))
         {
-            return $query->whereIn('name', Config::get('multi-ab::experiments'));
+            return $query->whereIn('name', Config::get('ab::experiments'));
         }
 
         return $query;
