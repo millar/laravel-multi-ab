@@ -18,14 +18,14 @@ class Goal extends Eloquent {
         parent::__construct($attributes);
 
         // Set the connection based on the config.
-        $this->connection = Config::get('ab::connection');
+        $this->connection = Config::get('multi-ab::connection');
     }
 
     public function scopeActive($query)
     {
-        if ($experiments = Config::get('ab::experiments'))
+        if ($experiments = Config::get('multi-ab::experiments'))
         {
-            return $query->whereIn('experiment', array_keys(Config::get('ab::experiments')));
+            return $query->whereIn('experiment', array_keys(Config::get('multi-ab::experiments')));
         }
 
         return $query;

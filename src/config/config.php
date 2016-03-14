@@ -21,8 +21,8 @@ return array(
     | A list of experiments with their variant identifiers.
     |
     | Example: [
-    |     'logo': ['big', 'small'],
-    |     'copy': ['a', 'b']
+    |     'logo' => ['big', 'small'],
+    |     'copy' => ['a', 'b']
     | ]
     |
     */

@@ -43,7 +43,7 @@ class InstallCommand extends Command {
      */
     public function fire()
     {
-        $connection = Config::get('ab::connection');
+        $connection = Config::get('multi-ab::connection');
 
         // Create experiments table.
         if ( ! Schema::connection($connection)->hasTable('ab_experiments'))
@@ -84,14 +84,14 @@ class InstallCommand extends Command {
 
         $this->info('Database schema initialized.');
 
-        $experiments = Config::get('ab::experiments');
+        $experiments = Config::get('multi-ab::experiments');
 
         if ( ! $experiments or empty($experiments))
         {
             return $this->error('No experiments configured.');
         }
 
-        $goals = Config::get('ab::goals');
+        $goals = Config::get('multi-ab::goals');
 
         if ( ! $goals or empty($goals))
         {

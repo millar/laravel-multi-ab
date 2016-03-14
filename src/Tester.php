@@ -140,7 +140,7 @@ class Tester {
 
         foreach ($experiments as $experiment => $v){
             // Only complete once per experiment.
-            if ( ! Config::get('ab::complete_multiple', false) && $this->session->getExperiment($experiment, "completed_$name")) return;
+            if ( ! Config::get('multi-ab::complete_multiple', false) && $this->session->getExperiment($experiment, "completed_$name")) return;
 
             $variant = $variant ?: $v;
 
@@ -176,7 +176,7 @@ class Tester {
      */
     public function getExperiments()
     {
-        return Config::get('ab::experiments', []);
+        return Config::get('multi-ab::experiments', []);
     }
 
     /**
@@ -186,7 +186,7 @@ class Tester {
      */
     public function getGoals()
     {
-        return Config::get('ab::goals', []);
+        return Config::get('multi-ab::goals', []);
     }
 
     /**
